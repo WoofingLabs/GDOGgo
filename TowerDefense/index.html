@@ -65,24 +65,35 @@
     let web3, account, points = 0;
 
     document.getElementById('connectBtn').onclick = async () => {
-        if (!window.ethereum) return alert('请安装 MetaMask 或 GateLayer 钱包');
+        if (!window.ethereum) {
+            alert('请安装 GateLayer 钱包！');
+            return;
+        }
+
         const btn = document.getElementById('connectBtn');
         btn.innerHTML = '连接中...';
         btn.disabled = true;
 
         try {
-            await window.ethereum.request({method: 'eth_requestAccounts'});
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
             web3 = new Web3(window.ethereum);
             account = (await web3.eth.getAccounts())[0];
-            await switchChain();
+
+            // 保留你的配置：chainId = 10088, RPC = gatenode.cc
+            await switchToGateLayerWithYourConfig();
 
             const contract = new web3.eth.Contract(ABI, CONTRACT);
             const wei = await contract.methods.getUserBalance(1, account).call();
+
+            if (!wei || wei === '0') {
+                alert('未检测到积分，请确认您持有 GDOG NFT');
+                throw new Error('Zero balance');
+            }
+
             points = Math.floor(Number(web3.utils.fromWei(wei, 'ether')));
 
             btn.innerHTML = `${account.slice(0,6)}...${account.slice(-4)}`;
             btn.classList.replace('btn-primary', 'btn-success');
-
             document.getElementById('points').textContent = points.toLocaleString();
             document.getElementById('startMoney').textContent = (50000 + points).toLocaleString();
             document.getElementById('walletStatus').innerHTML = '积分查询成功！<br>游戏即将开始...';
@@ -92,55 +103,86 @@
             startGameWithRetry();
 
         } catch (e) {
-            console.error(e);
-            alert('连接失败：' + (e.message || '请重试'));
+            console.error('Connect error:', e);
+            let msg = '连接失败';
+            if (e.code === 4001) msg = '用户取消授权';
+            else if (e.message.includes('network')) msg = '网络不稳定，请检查钱包';
+            else if (e.message.includes('timeout')) msg = '请求超时，RPC 节点可能不可用';
+            else msg += '：' + (e.message?.slice(0, 50) || '未知错误');
+
+            alert(msg);
             btn.innerHTML = '重新连接';
             btn.disabled = false;
         }
     };
 
-    async function switchChain() {
+    // 完全按你要求：chainId = 10088, RPC = gatenode.cc
+    async function switchToGateLayerWithYourConfig() {
+        const chainIdDecimal = 10088;
+        const chainIdHex = '0x' + chainIdDecimal.toString(16); // 0x2710
+
         const chain = {
-            chainId: 10088,
+            chainId: chainIdHex,
             chainName: 'Gate Layer',
-            rpcUrls: ['https://gatelayer-mainnet.gatenode.cc/'],
-            nativeCurrency: {name: 'GT', symbol: 'GT', decimals: 18}
+            rpcUrls: ['https://gatelayer-mainnet.gatenode.cc'],
+            nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 },
+            blockExplorerUrls: ['https://explorer.gatelayer.io']
         };
+
         try {
             await window.ethereum.request({
                 method: 'wallet_switchEthereumChain',
-                params: [{chainId: `0x${chain.chainId.toString(16)}`}]
+                params: [{ chainId: chainIdHex }]
             });
-        } catch (e) {
-            if (e.code === 4902) {
+        } catch (switchError) {
+            if (switchError.code === 4902) {
+                // 添加网络
                 await window.ethereum.request({
                     method: 'wallet_addEthereumChain',
                     params: [chain]
                 });
-            } else throw e;
+            } else {
+                // 保留你原来的 RPC，尝试用它创建 Web3 实例
+                try {
+                    web3 = new Web3(chain.rpcUrls[0]);
+                    const currentChainId = await web3.eth.getChainId();
+                    if (currentChainId !== chainIdDecimal) {
+                        throw new Error('Chain ID 不匹配');
+                    }
+                } catch (rpcError) {
+                    console.warn('RPC 节点不可用，尝试降级', rpcError);
+                    // 降级：不强制切换链，直接用当前网络
+                    alert('RPC 节点连接失败，将使用当前网络继续');
+                }
+                throw switchError;
+            }
         }
     }
 
     function startGameWithRetry() {
-        const retry = () => {
-            if (typeof _TD !== 'undefined') {
+        const tryStart = () => {
+            if (typeof _TD !== 'undefined' && _TD.init) {
                 startGame();
             } else {
-                setTimeout(retry, 100);
+                setTimeout(tryStart, 100);
             }
         };
-        retry();
+        tryStart();
     }
 
     function startGame() {
-        if (typeof _TD === 'undefined') return alert('游戏加载失败，请刷新页面');
         const board = document.getElementById("td-board");
         const loading = document.getElementById("td-loading");
         if (!board || !loading) return setTimeout(startGame, 100);
 
-        _TD.init("td-board", false);
-        loading.style.display = "none";
-        board.style.display = "block";
+        try {
+            _TD.init("td-board", false);
+            loading.style.display = "none";
+            board.style.display = "block";
+        } catch (e) {
+            console.error("Game init error:", e);
+            alert("游戏启动失败，请刷新页面");
+        }
     }
 </script>
 <script>
