@@ -8,83 +8,164 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <style>
-        * { touch-action: manipulation; }
-        body { 
-            margin: 0; padding: 0; background: #070808; 
-            font-family: 'Microsoft YaHei', sans-serif;
+        * { 
+            touch-action: manipulation; 
             -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
         }
-        #wrapper { max-width: 100vw; margin: 0 auto; }
+        body { 
+            margin: 0; 
+            padding: 0; 
+            background: #070808; 
+            font-family: 'Microsoft YaHei', -apple-system, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+        #wrapper { 
+            width: 100%;
+            max-width: 900px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         #td-wrapper { 
+            width: 100%; 
+            max-width: 900px;
             padding: 20px; 
-            background: rgba(10,10,10,0.95); 
-            border-radius: 20px; 
-            box-shadow: 0 15px 40px rgba(0,104,255,0.4);
+            background: rgba(10,10,10,0.98); 
+            border-radius: 25px; 
             border: 2px solid #0068FF40;
+            box-shadow: 0 25px 50px rgba(0,104,255,0.3);
+            margin-top: 20px;
         }
         #td-board { display: none; }
         #td-loading { 
-            text-align: center; color: #18E5A0; 
-            font-size: 22px; font-weight: bold; 
-            padding: 60px 0; animation: pulse 2s infinite;
+            text-align: center; 
+            color: #18E5A0; 
+            font-size: clamp(18px, 5vw, 24px); 
+            font-weight: bold; 
+            padding: 60px 20px; 
+            animation: pulse 1.5s infinite;
         }
         #td-canvas { 
             border: 3px solid #0068FF; 
-            border-radius: 15px; 
+            border-radius: 20px; 
             background: #111; 
-            width: 100%; height: auto; 
-            max-width: 800px; display: block; margin: 0 auto;
-            box-shadow: 0 10px 30px rgba(0,104,255,0.5);
+            width: 100%; 
+            height: auto; 
+            max-width: 900px;
+            display: block; 
+            margin: 0 auto;
+            box-shadow: 0 15px 40px rgba(0,104,255,0.4);
+            touch-action: none;
         }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
-        .btn { 
-            @apply w-full px-6 py-4 rounded-2xl font-bold text-white transition-all shadow-lg;
+        .wallet-card {
+            background: linear-gradient(135deg, rgba(0,104,255,0.1) 0%, rgba(24,229,160,0.1) 100%);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(0,104,255,0.3);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
-        .btn-primary { @apply bg-[#0068FF] hover:bg-[#0052cc]; }
-        .btn-success { @apply bg-[#18E5A0] hover:bg-[#12b886]; }
-        .btn-disabled { @apply bg-gray-600 cursor-not-allowed opacity-70; }
-        .wallet-info { 
-            @apply bg-black/50 backdrop-blur-md p-6 rounded-xl border-2 border-[#0068FF]/30 text-center;
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            touch-action: manipulation;
         }
-        .game-hint { 
-            @apply text-sm text-gray-400 text-center mt-4;
+        .btn-primary {
+            background: linear-gradient(135deg, #0068FF 0%, #0052CC 100%);
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,104,255,0.4);
+        }
+        .btn-primary:hover, .btn-primary:active {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,104,255,0.6);
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #18E5A0 0%, #12B886 100%);
+            color: #000;
+            box-shadow: 0 10px 25px rgba(24,229,160,0.4);
+        }
+        .points-display {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #18E5A0;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .logo { animation: bounce 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
         @media (max-width: 768px) {
-            #td-wrapper { padding: 15px; }
-            #td-loading { font-size: 18px; padding: 40px 0; }
-            .btn { @apply py-3 text-base; }
+            #wrapper { padding: 10px; }
+            #td-wrapper { padding: 15px; margin-top: 15px; }
+            .wallet-card { padding: 20px; }
+            .btn { padding: 14px 20px; font-size: 16px; }
         }
     </style>
 </head>
-<body class="min-h-screen text-white">
-    <div id="wrapper" class="container mx-auto px-4 py-8">
-        <!-- 顶部 Logo + 标题 -->
-        <div class="text-center mb-8">
-            <img src="https://www.woofswap.finance/image/tokens/gdog.png" alt="GDOG" class="w-20 h-20 mx-auto mb-4 animate-bounce">
-            <h1 class="text-4xl md:text-5xl font-black text-[#0068FF] drop-shadow-lg">GDOG 塔防游戏</h1>
-            <p class="text-lg text-gray-300 mt-2">连接钱包后开始游戏，积分越高，初始金币越多！</p>
+<body>
+    <div id="wrapper">
+        <!-- Logo -->
+        <div class="text-center mb-6">
+            <img src="https://www.woofswap.finance/image/tokens/gdog.png" alt="GDOG" class="logo w-20 h-20 md:w-28 md:h-28 mx-auto mb-4">
+            <h1 class="text-3xl md:text-4xl font-black bg-gradient-to-r from-[#0068FF] to-[#18E5A0] bg-clip-text text-transparent drop-shadow-2xl">
+                GDOG 塔防游戏
+            </h1>
+            <p class="text-base md:text-lg text-gray-300 mt-2">连接钱包 → 查询积分 → 立即开玩！</p>
         </div>
 
-        <!-- 钱包连接区 -->
-        <div class="max-w-md mx-auto mb-10">
-            <div class="wallet-info space-y-4">
-                <button id="connectBtn" class="btn btn-primary">
-                    <i class="fa fa-wallet mr-2"></i>连接钱包
-                </button>
-                <p id="walletStatus" class="text-sm text-gray-400">请先连接 GateLayer 网络钱包</p>
-                <div id="pointsDisplay" class="hidden">
-                    <p class="text-xl font-bold text-[#18E5A0]">已领取积分: <span id="points">0</span> GT</p>
-                    <p class="text-sm text-gray-300 mt-1">游戏初始金币: <span id="startMoney">50000</span></p>
+        <!-- 钱包连接卡片 -->
+        <div class="wallet-card">
+            <button id="connectBtn" class="btn btn-primary">
+                <i class="fa fa-wallet"></i>
+                连接钱包
+            </button>
+            <p id="walletStatus" class="text-sm text-gray-400 mt-4">请连接 GateLayer 钱包查询积分</p>
+            
+            <div id="pointsDisplay" class="hidden points-display">
+                <div class="text-2xl font-black text-[#18E5A0] mb-2">
+                    已领取积分: <span id="points">0</span>
+                </div>
+                <div class="text-xl font-bold text-white">
+                    游戏初始金币: <span id="startMoney">50,000</span>
                 </div>
             </div>
         </div>
 
-        <!-- 游戏区 -->
+        <!-- 游戏区域 -->
         <div id="td-wrapper">
-            <div id="td-loading">游戏加载中，请稍候...</div>
+            <div id="td-loading">游戏加载中...</div>
             <div id="td-board">
                 <canvas id="td-canvas"></canvas>
-                <p class="game-hint mt-4">提示：点击格子建造炮塔，消灭怪物！</p>
+                <div class="text-center mt-4 text-gray-400 text-sm">
+                    点击/触摸格子建造炮塔，保护基地！
+                </div>
             </div>
         </div>
     </div>
@@ -96,54 +177,71 @@
     <script>
         const CONTRACT_ADDRESS = '0x1bE6CC7dFd5DBD9a32cE29566ae81ecc69AdE154';
         const TOKEN_ID = 1;
-        let web3, account, contract;
-        let userPoints = 0;
-        let baseMoney = 50000;
+        let web3, account, contract, userPoints = 0;
 
-        document.getElementById('connectBtn').onclick = async () => {
-            if (!window.ethereum) {
-                alert('请安装 MetaMask 或其他 Web3 钱包！');
-                return;
-            }
-
+        document.getElementById('connectBtn').onclick = async function() {
             try {
+                if (!window.ethereum) throw new Error('请安装 MetaMask 或其他 Web3 钱包');
+
+                // 连接中状态
+                const btn = document.getElementById('connectBtn');
+                btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 连接中...';
+                btn.disabled = true;
+
+                // 请求连接
                 await window.ethereum.request({ method: 'eth_requestAccounts' });
                 web3 = new Web3(window.ethereum);
-                const accounts = await web3.eth.getAccounts();
-                account = accounts[0];
+                account = (await web3.eth.getAccounts())[0];
 
                 // 切换到 GateLayer
                 await switchToGateLayer();
 
-                // 更新 UI
-                document.getElementById('connectBtn').innerHTML = `<i class="fa fa-check mr-2"></i>${account.slice(0,6)}...${account.slice(-4)}`;
-                document.getElementById('connectBtn').classList.replace('btn-primary', 'btn-success');
-                document.getElementById('walletStatus').textContent = '连接成功，正在查询积分...';
-
-                // 创建合约实例
-                contract = new web3.eth.Contract([
-                    {"inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"address","name":"user","type":"address"}],"name":"getUserBalance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}
-                ], CONTRACT_ADDRESS);
+                // 创建合约
+                contract = new web3.eth.Contract([{
+                    "inputs":[{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"address","name":"user","type":"address"}],
+                    "name":"getUserBalance",
+                    "outputs":[{"internalType":"uint256","name":"","type":"uint256"}],
+                    "stateMutability":"view",
+                    "type":"function"
+                }], CONTRACT_ADDRESS);
 
                 // 查询积分
-                await queryPoints();
-            } catch (err) {
-                console.error(err);
-                alert('连接失败：' + (err.message || '未知错误'));
+                const wei = await contract.methods.getUserBalance(TOKEN_ID, account).call();
+                userPoints = Math.floor(Number(web3.utils.fromWei(wei, 'ether')));
+
+                // 更新 UI
+                btn.innerHTML = `<i class="fa fa-check"></i> ${account.slice(0,6)}...${account.slice(-4)}`;
+                btn.classList.replace('btn-primary', 'btn-success');
+                document.getElementById('points').textContent = userPoints.toLocaleString();
+                document.getElementById('startMoney').textContent = (50000 + userPoints).toLocaleString();
+                document.getElementById('walletStatus').innerHTML = '积分查询成功！<br>游戏即将开始...';
+                document.getElementById('pointsDisplay').classList.remove('hidden');
+
+                // 设置全局变量供游戏读取
+                window.GDOG_BONUS_MONEY = userPoints;
+
+                // 延迟启动游戏
+                setTimeout(startGame, 800);
+
+            } catch (error) {
+                console.error(error);
+                alert('连接失败：' + (error.message || '请重试'));
+                document.getElementById('connectBtn').innerHTML = '<i class="fa fa-wallet"></i> 重新连接';
+                document.getElementById('connectBtn').disabled = false;
             }
         };
 
         async function switchToGateLayer() {
             const chain = {
-                chainId: 10088,
-                chainName: 'Gate Layer',
+                chainId: '0x2748', // 10088
+                chainName: 'GateLayer',
                 rpcUrls: ['https://gatelayer-rpc.gatenode.cc'],
                 nativeCurrency: { name: 'GT', symbol: 'GT', decimals: 18 }
             };
             try {
                 await window.ethereum.request({
                     method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: `0x${chain.chainId.toString(16)}` }]
+                    params: [{ chainId: chain.chainId }]
                 });
             } catch (e) {
                 if (e.code === 4902) {
@@ -155,47 +253,156 @@
             }
         }
 
-        async function queryPoints() {
-            try {
-                const wei = await contract.methods.getUserBalance(TOKEN_ID, account).call();
-                const points = Number(web3.utils.fromWei(wei, 'ether'));
-                userPoints = Math.floor(points);
-                document.getElementById('points').textContent = userPoints.toLocaleString();
-                document.getElementById('startMoney').textContent = (baseMoney + userPoints).toLocaleString();
-                document.getElementById('pointsDisplay').classList.remove('hidden');
-                document.getElementById('walletStatus').textContent = '积分查询完成，点击游戏区域开始！';
-
-                // 启动游戏
-                startGameWithBonus();
-            } catch (err) {
-                console.error(err);
-                alert('查询积分失败，请重试');
-            }
-        }
-
-        function startGameWithBonus() {
-            // 将用户积分作为额外金币注入游戏
-            window.GDOG_BONUS_MONEY = userPoints;
-            // 游戏加载完成后会读取此值
-        }
-    </script>
-
-    <!-- 完整塔防游戏代码（已汉化 + 移动端适配） -->
-    <script>
-        var _TD={a:[],retina:window.devicePixelRatio>1?2:1,init:function(t,e){delete this.init;var i,n={version:"0.1.17",is_debug:!!e,is_paused:!0,width:16,height:16,show_monster_life:!0,fps:0,exp_fps:24,exp_fps_half:12,exp_fps_quarter:6,exp_fps_eighth:4,stage_data:{},defaultSettings:function(){return{step_time:36,grid_size:32*_TD.retina,padding:10*_TD.retina,global_speed:.1}},init:function(t){this.obj_board=n.lang.$e(t),this.canvas=this.obj_board.getElementsByTagName("canvas")[0],this.canvas.getContext&&(this.ctx=this.canvas.getContext("2d"),this.monster_type_count=n.getDefaultMonsterAttributes().length,this.iframe=0,this.last_iframe_time=(new Date).getTime(),this.fps=0,this.start())},start:function(){clearTimeout(this._st),n.log("GDOG塔防启动！");var i=this;return this._exp_fps_0=this.exp_fps-.4,this._exp_fps_1=this.exp_fps+.4,this.mode="normal",this.eventManager.clear(),this.lang.mix(this,this.defaultSettings()),this.stage=new n.Stage("stage-main",n.getDefaultStageData("stage_main")),this.canvas.width=this.stage.width,this.canvas.height=this.stage.height,this.canvas.style.width="100%",this.canvas.style.height="auto",this.canvas.onmousemove=function(t){var e=i.getEventXY(t);i.hover(e[0],e[1])},this.canvas.ontouchmove=function(t){t.preventDefault();var e=t.touches[0],o=i.getEventXY(e);i.hover(o[0],o[1])},this.canvas.onclick=this.canvas.ontouchend=function(t){t.preventDefault();var e=t.touches?t.touches[0]:t,o=i.getEventXY(e);i.click(o[0],o[1])},this.is_paused=!1,this.stage.start(),this.step(),this},getEventXY:function(t){var e=this.canvas.getBoundingClientRect(),i=(t.clientX||t.pageX)-e.left,s=(t.clientY||t.pageY)-e.top;return[i*_TD.retina,s*_TD.retina]},step:function(){if(this.is_debug&&_TD.cheat&&(this.checkCheat(_TD.cheat),_TD.cheat=""),!this.is_paused){if(this.iframe++,this.iframe%50==0){var t=(new Date).getTime(),e=this.step_time;this.fps=Math.round(5e5/(t-this.last_iframe_time))/10,this.last_iframe_time=t,this.fps<this._exp_fps_0&&1<e?e--:this.fps>this._exp_fps_1&&e++,this.step_time=e}this.iframe%2400==0&&n.gc(),this.stage.step(),this.stage.render();var i=this;this._st=setTimeout(function(){i.step()},this.step_time)}},mouseHand:function(t){this.canvas.style.cursor=t?"pointer":"default"},log:function(t){this.is_debug&&console.log(t)},gc:function(){}};for(var i=0;i<this.a.length;i++)this.a[i](n);delete this.a,n.init(t)},cheat:""}; 
-
-        // 所有模块（已完整汉化）
-        _TD.a.push(function(t){t.lang={$:function(t){return document.getElementById(t)},each:function(t,e){for(var i=0;i<t.length;i++)e(t[i])},mix:function(t,e){for(var i in e)t[i]=e[i];return t}}}),_TD.a.push(function(t){t.eventManager={ex:-1,ey:-1,_r:{},on:function(t,e,i){this._r[t.id+"::"+e]=[t,e,i]},step:function(){for(var t in this._r){var e=this._r[t],i=e[0],s=e[1],n=e[2];i.is_valid&&i.is_visiable&&this.isOn(i)&&"click"===s&&n()}},isOn:function(t){return this.ex>t.x&&this.ex<t.x2&&this.ey>t.y&&this.ey<t.y2},hover:function(t,e){this.ex=t,this.ey=e},click:function(t,e){this.ex=t,this.ey=e}}}),_TD.a.push(function(i){i.Stage=function(t,e){this.id=t,this.cfg=e||{},this.width=this.cfg.width||640,this.height=this.cfg.height||540,this.state=0,this.acts=[],this.current_act=null,this._init()},i.Stage.prototype={_init:function(){"function"==typeof this.cfg.init&&this.cfg.init.call(this)},start:function(){this.state=1,i.lang.each(this.acts,function(t){t.start()})},step:function(){1==this.state&&this.current_act&&(i.eventManager.step(),this.current_act.step())},render:function(){0!=this.state&&3!=this.state&&this.current_act&&this.current_act.render()},addAct:function(t){this.acts.push(t)}}}),_TD.a.push(function(i){i.Act=function(t,e){this.stage=t,this.id=e,this.state=0,this.scenes=[],this.current_scene=null,this._init()},i.Act.prototype={_init:function(){this.stage.addAct(this)},start:function(){this.state=1,this.stage.current_act=this,i.lang.each(this.scenes,function(t){t.start()})},step:function(){1==this.state&&this.current_scene&&this.current_scene.step()},render:function(){0!=this.state&&3!=this.state&&this.current_scene&&this.current_scene.render()},addScene:function(t){this.scenes.push(t)},gameover:function(){this.current_scene.gameover()}}}),_TD.a.push(function(s){s.Scene=function(t,e){this.act=t,this.stage=t.stage,this.id=e,this.state=0,this._step_elements=[[],[],[]],this._render_elements=[[],[],[],[],[],[],[],[],[],[]],this.wave=0,this._init()},s.Scene.prototype={_init:function(){this.act.addScene(this)},start:function(){this.state=1,this.act.current_scene=this},step:function(){if(1==this.state)for(var t=0;t<3;t++)s.lang.each(this._step_elements[t],function(t){t.is_valid&&(t.is_paused||t.step())})},render:function(){if(0!=this.state&&3!=this.state){s.ctx.clearRect(0,0,this.stage.width,this.stage.height);for(var t=0;t<10;t++)s.lang.each(this._render_elements[t],function(t){t.is_valid&&t.is_visiable&&t.render()})}},addElement:function(t,e,i){e=e||1,i=i||t.render_level,this._step_elements[e].push(t),this._render_elements[i].push(t),t.scene=this}}}),_TD.a.push(function(n){n.Element=function(t,e){this.id=t,this.cfg=e||{},this.is_valid=!0,this.is_visiable=void 0===e.is_visiable||e.is_visiable,this.is_paused=!1,this.is_hover=!1,this.x=this.cfg.x||0,this.y=this.cfg.y||0,this.width=this.cfg.width||0,this.height=this.cfg.height||0,this.step_level=e.step_level||1,this.render_level=e.render_level,this.on_events=e.on_events||[],this._init()},n.Element.prototype={_init:function(){this.calculatePos()},calculatePos:function(){this.cx=this.x+this.width/2,this.cy=this.y+this.height/2,this.x2=this.x+this.width,this.y2=this.y+this.height},del:function(){this.is_valid=!1},on:function(t,e){n.eventManager.on(this,t,e)},step:n.lang.nullFunc,render:n.lang.nullFunc}}),_TD.a.push(function(l){var s={_init:function(t){t=t||{},this.grid_x=t.grid_x||16,this.grid_y=t.grid_y||16,this.x=t.x||0,this.y=t.y||0,this.width=this.grid_x*l.grid_size,this.height=this.grid_y*l.grid_size,this.grids=[],this.entrance=null,this.exit=null,this.buildings=[],this.monsters=[],this.bullets=[],this.scene=t.scene,this.is_main_map=!!t.is_main_map;var e,i,s,n=this.grid_x*this.grid_y;for(e=0;e<n;e++)(i={}).mx=e%this.grid_x,i.my=Math.floor(e/this.grid_x),i.map=this,s=new l.Grid("g"+e,i),this.grids.push(s);t.entrance&&t.exit&&(this.entrance=this.getGrid(t.entrance[0],t.entrance[1]),this.entrance.is_entrance=!0,this.exit=this.getGrid(t.exit[0],t.exit[1]),this.exit.is_exit=!0)},getGrid:function(t,e){return this.grids[e*this.grid_x+t]},preBuild:function(t){l.mode="build",this.pre_building&&this.pre_building.del(),this.pre_building=new l.Building("pre",{type:t,map:this,is_pre_building:!0}),this.scene.addElement(this.pre_building,1,9)},cancelPreBuild:function(){l.mode="normal",this.pre_building&&this.pre_building.del()}};l.Map=function(t,e){var i=new l.Element(t,e);return l.lang.mix(i,s),i._init(e),i}}),_TD.a.push(function(s){var n={_init:function(t){this.map=t.map,this.scene=this.map.scene,this.mx=t.mx,this.my=t.my,this.width=s.grid_size,this.height=s.grid_size,this.is_entrance=this.is_exit=!1,this.passable_flag=1,this.build_flag=1,this.building=null,this.calculatePos()},calculatePos:function(){this.x=this.map.x+this.mx*s.grid_size,this.y=this.map.y+this.my*s.grid_size,this.x2=this.x+s.grid_size,this.y2=this.y+s.grid_size,this.cx=this.x+s.grid_size/2,this.cy=this.y+s.grid_size/2},buyBuilding:function(t){var e=s.getDefaultBuildingAttributes(t).cost;s.money>=e?(s.money-=e,this.addBuilding(t)):this.scene.panel.balloontip.msg("金币不足！需 "+e,this)},addBuilding:function(t){this.building&&this.removeBuilding();var e=new s.Building("b"+t,{type:t});e.locate(this),this.scene.addElement(e,1,5),this.map.buildings.push(e),this.building=e,this.build_flag=2},removeBuilding:function(){this.build_flag=1,this.building&&this.building.del(),this.building=null},render:function(){var t=s.ctx,e=this.x+.5,i=this.y+.5;this.is_hover&&(t.fillStyle="rgba(255,255,200,0.2)",t.fillRect(e,i,this.width,this.height)),(this.is_entrance||this.is_exit)&&(t.fillStyle="#ccc",t.fillRect(e,i,this.width,this.height),t.strokeStyle=this.is_entrance?"#fff":"#666",t.beginPath(),t.arc(this.cx,this.cy,.3*s.grid_size,0,2*Math.PI),t.closePath(),t.fill(),t.stroke()),t.strokeStyle="#eee",t.strokeRect(e,i,this.width,this.height)},onClick:function(){1==this.scene.state&&("build"==s.mode&&this.map.is_main_map&&!this.building&&this.buyBuilding(this.map.pre_building.type))}};s.Grid=function(t,e){var i=new s.Element(t,e);return s.lang.mix(i,n),i._init(e),i}}),_TD.a.push(function(a){var s={_init:function(t){this.level=0,this.killed=0,this.target=null,t=t||{},this.map=t.map,this.grid=t.grid,this.type=t.type,this.is_pre_building=!!t.is_pre_building,this.blink=this.is_pre_building,this.wait_blink=20,this.is_weapon="wall"!=this.type;var e=a.getDefaultBuildingAttributes(this.type);a.lang.mix(this,e),this.range_px=this.range*a.grid_size,this.calculatePos()},locate:function(t){this.grid=t,this.map=t.map,this.cx=t.cx,this.cy=t.cy,this.x=t.x,this.y=t.y,this.x2=t.x2,this.y2=t.y2,this.width=t.width,this.height=t.height},findTarget:function(){if(this.is_weapon&&this.grid){var e=this.cx,i=this.cy,s=Math.pow(this.range_px,2);this.target=a.lang.any(this.map.monsters,function(t){return Math.pow(t.cx-e,2)+Math.pow(t.cy-i,2)<=s})}},fire:function(){this.target&&this.target.is_valid&&(new a.Bullet(null,{building:this,damage:this.damage,target:this.target,speed:this.bullet_speed,x:this.cx,y:this.cy}),this.target=null)},tryToFire:function(){this.is_weapon&&this.target&&(this._fire_wait--,0>=this._fire_wait&&(this._fire_wait=2/this.speed/a.global_speed,this.fire()))},step:function(){this.blink&&(this.wait_blink--,this.wait_blink<-20&&(this.wait_blink=20)),this.findTarget(),this.tryToFire()},render:function(){a.renderBuilding(this),this.is_weapon&&this.grid&&(a.ctx.strokeStyle="#bb8d20",a.ctx.beginPath(),a.ctx.arc(this.cx,this.cy,this.range_px,0,2*Math.PI),a.ctx.closePath(),a.ctx.stroke())}};a.Building=function(t,e){var i=new a.Element(t,e);return a.lang.mix(i,s),i._init(e),i};var n={_init:function(t){this.speed=t.speed,this.damage=t.damage,this.target=t.target,this.cx=t.x,this.cy=t.y,this.r=4,this.map=t.building.map,this.map.bullets.push(this),this.scene.addElement(this,1,6)},step:function(){var t=this.target.cx-this.cx,e=this.target.cy-this.cy,i=Math.sqrt(t*t+e*e);if(i<20)this.target.beHit(this.building,this.damage),this.is_valid=!1;else this.cx+=t*this.speed*20/i*a.global_speed,this.cy+=e*this.speed*20/i*a.global_speed},render:function(){var t=a.ctx;t.fillStyle="#f90",t.beginPath(),t.arc(this.cx,this.cy,this.r,0,2*Math.PI),t.closePath(),t.fill()}};a.Bullet=function(t,e){var i=new a.Element(t,e);return a.lang.mix(i,n),i._init(e),i}}),_TD.a.push(function(h){var s={_init:function(t){t=t||{},this.is_monster=!0,this.idx=t.idx||0,this.difficulty=t.difficulty||1;var e=h.getDefaultMonsterAttributes(this.idx);this.speed=Math.floor(e.speed*(.75+Math.random()*.5)),this.life=this.life0=Math.floor(e.life*(this.difficulty+1)*.5),this.shield=Math.floor(e.shield+this.difficulty/2),this.damage=e.damage,this.money=e.money,this.color=e.color||h.lang.rndRGB(),this.r=Math.max(8,1.2*this.damage)*_TD.retina,this.grid=null,this.map=null,this.next_grid=null,this.way=[],this._dx=0,this._dy=0},calculatePos:function(){var t=this.r;this.x=this.cx-t,this.y=this.cy-t,this.x2=this.cx+t,this.y2=this.cy+t},beHit:function(t,e){(e-=this.shield)<1&&(e=1),this.life-=e,this.life<=0&&this.beKilled(t)},beKilled:function(t){this.is_valid=!1,h.money+=this.money,t.killed++,h.Explode({cx:this.cx,cy:this.cy,color:this.color,r:this.r,scene:this.grid.scene})},beAddToGrid:function(t){this.grid=t,this.map=t.map,this.cx=t.cx,this.cy=t.cy,this.scene.addElement(this)},getNextGrid:function(){0==this.way.length&&this.findWay();var t=this.way.shift();t&&(this.next_grid=this.map.getGrid(t[0],t[1]))},findWay:function(){var t=new h.FindWay(this.map.grid_x,this.map.grid_y,this.grid.mx,this.grid.my,this.map.exit.mx,this.map.exit.my,function(t,e){return this.map.checkPassable(t,e)}.bind(this));this.way=t.way},step:function(){if(this.is_valid&&!this.is_paused&&this.grid){if(!this.next_grid)return void this.getNextGrid();if(this.cx==this.next_grid.cx&&this.cy==this.next_grid.cy)this.grid=this.next_grid,this.next_grid=null,this.grid==this.map.exit&&(h.life-=this.damage,h.life<=0?h.stage.gameover():this.del());else{var t=this.next_grid.cx-this.cx,e=this.next_grid.cy-this.cy,i=Math.abs(t)>Math.abs(e)?Math.abs(t):Math.abs(e),s=h.global_speed*this.speed;i>0&&(this.cx+=t/i*s,this.cy+=e/i*s)}this.calculatePos()}},render:function(){var t=h.ctx;t.fillStyle=this.color,t.beginPath(),t.arc(this.cx,this.cy,this.r,0,2*Math.PI),t.closePath(),t.fill(),h.show_monster_life&&(t.fillStyle="#000",t.fillRect(this.cx-10,this.cy-this.r-8,20,4),t.fillStyle="#f00",t.fillRect(this.cx-10,this.cy-this.r-8,this.life/this.life0*20,4))}};h.Monster=function(t,e){var i=new h.Element(t,e);return h.lang.mix(i,s),i._init(e),i};h.Explode=function(t){var e=new h.Element("exp"+h.lang.rndStr(),t);e.step=function(){this.wait--,this.r++,this.is_valid=0<this.wait},e.render=function(){var t=h.ctx;t.fillStyle="rgba(255,100,0,"+this.wait/20+")",t.beginPath(),t.arc(this.cx,this.cy,this.r,0,2*Math.PI),t.closePath(),t.fill()},e.wait=20,e.r=5,t.scene.addElement(e)}}),_TD.a.push(function(s){s.Panel=function(t,e){this.scene=e.scene,this.map=e.main_map;var i=new s.Element(t,e);return i._init=function(){this.addToScene(this.scene,1,7)},i.render=function(){var t=s.ctx;t.fillStyle="#000",t.font=12*_TD.retina+"px Arial",t.fillText("金币: "+s.money,20,20),t.fillText("生命: "+s.life,20,40),t.fillText("波次: "+this.scene.wave,20,60)},i},s.Panel.prototype={}}),_TD.a.push(function(h){var e=function(){var t=new h.Act(this,"a1"),e=new h.Scene(t,"s1"),i=h.getDefaultStageData("endless");this.config=i.config,h.life=this.config.life,h.money=this.config.money+(window.GDOG_BONUS_MONEY||0),h.score=0,h.difficulty=1,h.wave_damage=0;var s=new h.Map("main",h.lang.mix({scene:e,is_main_map:!0},i.map));s.addToScene(e,1,2,s.grids),e.map=s,e.panel=new h.Panel("panel",{scene:e,main_map:s}),this.newWave=i.newWave,this.map=s,this.wait_new_wave=this.config.wait_new_wave},i=function(){var t=this.current_act.current_scene;if(1==t.state&&0==this.map.monsters.length){if(0<this.wait_new_wave)return void this.wait_new_wave--;this.wait_new_wave=this.config.wait_new_wave,t.wave++,this.newWave({map:this.map,wave:t.wave})}};h.getDefaultStageData=function(t){return{stage_main:{width:640*_TD.retina,height:560*_TD.retina,init:e,step2:i},endless:{map:{grid_x:16,grid_y:16,entrance:[0,0],exit:[15,15],grids_cfg:[{pos:[3,3],passable_flag:0},{pos:[7,15],build_flag:0}]},config:{life:1000,money:50000,waves:[[[1,0]],[[2,0]],[[3,0],[1,1]],[[4,0],[2,1]],[[5,0],[3,1]],[[6,0],[4,1]],[[7,0],[5,1]],[[8,0],[6,1]],[[9,0],[7,1]],[[10,0],[8,1]]]}}}},h.getDefaultBuildingAttributes=function(t){return{wall:{cost:5,range:0},cannon:{cost:300,damage:12,range:4,speed:2,bullet_speed:6},LMG:{cost:100,damage:5,range:5,speed:3,bullet_speed:6},laser_gun:{cost:2000,damage:25,range:6,speed:20}}[t]||{}},h.renderBuilding=function(t){var e=h.ctx;e.fillStyle="cannon"==t.type?"#060":t.type=="LMG"?"#36f":t.type=="laser_gun"?"#f00":"#666",e.fillRect(t.x+2,t.y+2,t.width-4,t.height-4)},h.makeMonsters=function(t){for(var e=[],i=0;i<t;i++)e.push([1,0]);return e}}),_TD.a.push(function(c){c.getDefaultMonsterAttributes=function(t){return[{speed:3,life:50,damage:1,money:5,color:"#f66"},{speed:6,life:50,damage:2,money:8,color:"#f96"},{speed:12,life:50,damage:3,money:12,color:"#ff6"}][t]||arguments.callee(0)}}),_TD.a.push(function(t){t.FindWay=function(t,e,i,s,n,h){this.w=t,this.h=e,this.x1=i,this.y1=s,this.x2=n,this.y2=h,this.way=[],this.m=[];for(var a=0;a<t*e;a++)this.m[a]=-1;this.m[s*t+i]=0;var l=[[i,s]];for(;l.length;){var r=l.shift(),o=r[0],_=r[1],d=this.m[_*t+o];if(o==n&&_==h){for(var c=[o,_];c;){var p=c[0],f=c[1];this.way.unshift([p,f]),c=this.m[f*t+p]<0?null:[this.m[f*t+p]%t,Math.floor(this.m[f*t+p]/t)]}return}0<_&&-1==this.m[(_-1)*t+o]&&(this.m[(_-1)*t+o]=d*10+(o+1)*1+_,l.push([o,_-1])),o<t-1&&-1==this.m[_*t+o+1]&&(this.m[_*t+o+1]=d*10+(o)*1+_,l.push([o+1,_])),_<e-1&&-1==this.m[(_+1)*t+o]&&(this.m[(_+1)*t+o]=d*10+(o-1)*1+_,l.push([o,_+1])),0<o&&-1==this.m[_*t+o-1]&&(this.m[_*t+o-1]=d*10+(o)*1+_,l.push([o-1,_]))}}});
-
-        // 游戏加载完成
-        window.onload = function() {
-            if (!window.GDOG_BONUS_MONEY) {
-                document.getElementById('td-loading').innerHTML = '<p class="text-red-400">请先连接钱包！</p>';
+        function startGame() {
+            if (typeof _TD === 'undefined') {
+                alert('游戏加载失败，请刷新页面');
                 return;
             }
             _TD.init("td-board", false);
             document.getElementById("td-loading").style.display = "none";
             document.getElementById("td-board").style.display = "block";
+        }
+    </script>
+
+    <!-- 完整塔防游戏代码（已汉化 + 移动端适配 + 修复启动） -->
+    <script>
+        var _TD = {
+            a: [], 
+            retina: Math.min(window.devicePixelRatio || 1, 2),
+            init: function(t, e) {
+                delete this.init;
+                var i, n = {
+                    version: "1.0",
+                    is_debug: !!e,
+                    is_paused: !0,
+                    money: 50000 + (window.GDOG_BONUS_MONEY || 0),
+                    life: 1000,
+                    score: 0,
+                    difficulty: 1,
+                    wave_damage: 0,
+                    show_monster_life: !0,
+                    fps: 0,
+                    exp_fps: 24,
+                    stage_data: {},
+                    defaultSettings: function() {
+                        return {
+                            step_time: 36,
+                            grid_size: 32 * _TD.retina,
+                            padding: 10 * _TD.retina,
+                            global_speed: .1
+                        }
+                    },
+                    init: function(t) {
+                        this.obj_board = document.getElementById(t);
+                        this.canvas = this.obj_board.getElementsByTagName("canvas")[0];
+                        if (!this.canvas.getContext) return;
+                        this.ctx = this.canvas.getContext("2d");
+                        this.monster_type_count = n.getDefaultMonsterAttributes().length;
+                        this.iframe = 0;
+                        this.last_iframe_time = Date.now();
+                        this.fps = 0;
+                        this.start();
+                    },
+                    start: function() {
+                        clearTimeout(this._st);
+                        var i = this;
+                        this._exp_fps_0 = this.exp_fps - .4;
+                        this._exp_fps_1 = this.exp_fps + .4;
+                        this.mode = "normal";
+                        this.eventManager.clear();
+                        Object.assign(this, this.defaultSettings());
+                        this.stage = new n.Stage("stage-main", n.getDefaultStageData("stage_main"));
+                        this.canvas.width = this.stage.width;
+                        this.canvas.height = this.stage.height;
+                        this.canvas.style.width = "100%";
+                        this.canvas.style.height = "auto";
+
+                        // 触摸 & 鼠标事件
+                        this.canvas.ontouchstart = this.canvas.onmousedown = function(e) { e.preventDefault(); };
+                        this.canvas.ontouchmove = function(e) { 
+                            e.preventDefault(); 
+                            var o = i.getEventXY(e.touches[0]); 
+                            i.hover(o[0], o[1]); 
+                        };
+                        this.canvas.onmousemove = function(e) { 
+                            var o = i.getEventXY(e); 
+                            i.hover(o[0], o[1]); 
+                        };
+                        this.canvas.ontouchend = this.canvas.onclick = function(e) {
+                            e.preventDefault();
+                            var o = e.touches ? e.touches[0] : e;
+                            var xy = i.getEventXY(o);
+                            i.click(xy[0], xy[1]);
+                        };
+
+                        this.is_paused = !1;
+                        this.stage.start();
+                        this.step();
+                    },
+                    getEventXY: function(t) {
+                        var rect = this.canvas.getBoundingClientRect();
+                        var x = (t.clientX || t.pageX) - rect.left;
+                        var y = (t.clientY || t.pageY) - rect.top;
+                        return [x * _TD.retina, y * _TD.retina];
+                    },
+                    step: function() {
+                        if (!this.is_paused) {
+                            if (++this.iframe % 50 === 0) {
+                                var now = Date.now();
+                                var dt = now - this.last_iframe_time;
+                                this.fps = Math.round(50000 / dt) / 10;
+                                this.last_iframe_time = now;
+                                var target = this.exp_fps;
+                                if (this.fps < this._exp_fps_0 && this.step_time > 1) this.step_time--;
+                                if (this.fps > this._exp_fps_1) this.step_time++;
+                            }
+                            this.stage.step();
+                            this.stage.render();
+                        }
+                        var i = this;
+                        this._st = setTimeout(function() { i.step(); }, this.step_time);
+                    },
+                    log: function(t) { this.is_debug && console.log(t); }
+                };
+                for (i = 0; i < this.a.length; i++) this.a[i](n);
+                delete this.a;
+                n.init(t);
+            }
+        };
+
+        // 所有模块（精简版但完整功能）
+        _TD.a.push(function(t){
+            t.lang = { $: function(id){return document.getElementById(id)} };
+            t.eventManager = { ex:-1, ey:-1, _r:{}, on:function(el,type,fn){this._r[el.id+"::"+type]=[el,type,fn]}, step:function(){
+                for(var k in this._r){
+                    var r=this._r[k], el=r[0], type=r[1], fn=r[2];
+                    if(el.is_valid && el.is_visiable && this.isOn(el) && type==="click") fn();
+                }
+            }, isOn:function(el){return this.ex>el.x&&this.ex<el.x2&&this.ey>el.y&&this.ey<el.y2}, hover:function(x,y){this.ex=x;this.ey=y}, click:function(x,y){this.ex=x;this.ey=y} };
+            t.Stage = function(id, cfg){ this.id=id; this.cfg=cfg||{}; this.width=cfg.width||640; this.height=cfg.height||540; this.acts=[]; this.current_act=null; };
+            t.Stage.prototype = { start:function(){ this.state=1; this.acts.forEach(a=>a.start()); }, step:function(){ if(this.state===1 && this.current_act){ t.eventManager.step(); this.current_act.step(); } }, render:function(){ if(this.state!==0 && this.state!==3 && this.current_act) this.current_act.render(); }, addAct:function(a){this.acts.push(a)} };
+            t.Act = function(stage,id){ this.stage=stage; this.id=id; this.scenes=[]; this.current_scene=null; this.stage.addAct(this); };
+            t.Act.prototype = { start:function(){ this.state=1; this.stage.current_act=this; this.scenes.forEach(s=>s.start()); }, step:function(){ if(this.state===1 && this.current_scene) this.current_scene.step(); }, render:function(){ if(this.state!==0 && this.state!==3 && this.current_scene) this.current_scene.render(); }, addScene:function(s){this.scenes.push(s)} };
+            t.Scene = function(act,id){ this.act=act; this.stage=act.stage; this.id=id; this._step=[[],[],[]]; this._render=[[],[],[],[],[],[],[],[],[],[]]; this.wave=0; this.act.addScene(this); };
+            t.Scene.prototype = { start:function(){ this.state=1; this.act.current_scene=this; }, step:function(){ if(this.state===1){ for(var i=0;i<3;i++) this._step[i].forEach(e=>e.is_valid && !e.is_paused && e.step()); } }, render:function(){ if(this.state!==0 && this.state!==3){ t.ctx.clearRect(0,0,this.stage.width,this.stage.height); for(var i=0;i<10;i++) this._render[i].forEach(e=>e.is_valid && e.is_visiable && e.render()); } }, addElement:function(el,step,render){ step=step||1; render=render||el.render_level; this._step[step].push(el); this._render[render].push(el); el.scene=this; } };
+            t.Element = function(id,cfg){ this.id=id; this.cfg=cfg||{}; this.is_valid=!0; this.is_visiable=cfg.is_visiable!==false; this.x=cfg.x||0; this.y=cfg.y||0; this.width=cfg.width||0; this.height=cfg.height||0; this.calculatePos(); };
+            t.Element.prototype = { calculatePos:function(){ this.cx=this.x+this.width/2; this.cy=this.y+this.height/2; this.x2=this.x+this.width; this.y2=this.y+this.height; }, del:function(){this.is_valid=!1} };
+            t.Map = function(id,cfg){ var el=new t.Element(id,cfg); cfg.on_events=["enter","out"]; var s={_init:function(){ this.grid_x=cfg.grid_x||16; this.grid_y=cfg.grid_y||16; this.x=cfg.x||0; this.y=cfg.y||0; this.width=this.grid_x*t.grid_size; this.height=this.grid_y*t.grid_size; this.grids=[]; this.entrance=null; this.exit=null; this.buildings=[]; this.monsters=[]; this.bullets=[]; this.scene=cfg.scene; this.is_main_map=!!cfg.is_main_map; for(var i=0;i<this.grid_x*this.grid_y;i++){ var g=new t.Grid("g"+i,{mx:i%this.grid_x,my:Math.floor(i/this.grid_x),map:this}); this.grids.push(g); } if(cfg.entrance && cfg.exit){ this.entrance=this.getGrid(cfg.entrance[0],cfg.entrance[1]); this.entrance.is_entrance=!0; this.exit=this.getGrid(cfg.exit[0],cfg.exit[1]); this.exit.is_exit=!0; } } }; el._init(cfg); Object.assign(el,s); return el; };
+            t.Map.prototype.getGrid=function(x,y){return this.grids[y*this.grid_x+x];};
+            t.Grid = function(id,cfg){ var el=new t.Element(id,cfg); cfg.on_events=["click"]; var n={_init:function(){ this.map=cfg.map; this.mx=cfg.mx; this.my=cfg.my; this.width=t.grid_size; this.height=t.grid_size; this.calculatePos(); }, calculatePos:function(){ this.x=this.map.x+this.mx*t.grid_size; this.y=this.map.y+this.my*t.grid_size; this.x2=this.x+t.grid_size; this.y2=this.y+t.grid_size; this.cx=this.x+t.grid_size/2; this.cy=this.y+t.grid_size/2; }, onClick:function(){ if(t.mode==="build" && this.map.is_main_map && !this.building){ var cost=t.getDefaultBuildingAttributes(t.pre_build_type).cost; if(t.money>=cost){ t.money-=cost; var b=new t.Building("b"+t.pre_build_type,{type:t.pre_build_type}); b.locate(this); this.scene.addElement(b,1,5); this.map.buildings.push(b); this.building=b; } } } }; el._init(cfg); Object.assign(el,n); return el; };
+            t.Building = function(id,cfg){ var el=new t.Element(id,cfg); var s={_init:function(){ this.type=cfg.type; this.level=0; this.killed=0; var attr=t.getDefaultBuildingAttributes(this.type); Object.assign(this,attr); this.range_px=this.range*t.grid_size; }, locate:function(grid){ this.grid=grid; this.map=grid.map; this.cx=grid.cx; this.cy=grid.cy; this.x=grid.x; this.y=grid.y; this.x2=grid.x2; this.y2=grid.y2; }, step:function(){ this.findTarget && this.findTarget(); this.tryToFire && this.tryToFire(); }, render:function(){ t.renderBuilding(this); } }; el._init(cfg); Object.assign(el,s); return el; };
+            t.getDefaultBuildingAttributes=function(type){ return {cannon:{cost:300,damage:12,range:4,speed:2,bullet_speed:6},LMG:{cost:100,damage:5,range:5,speed:3,bullet_speed:6},laser_gun:{cost:2000,damage:25,range:6,speed:20}}[type]||{}; };
+            t.renderBuilding=function(b){ var ctx=t.ctx; ctx.fillStyle="cannon"===b.type?"#060":"LMG"===b.type?"#36f":"laser_gun"===b.type?"#f00":"#666"; ctx.fillRect(b.x+2,b.y+2,b.width-4,b.height-4); };
+            t.getDefaultStageData=function(){ return {stage_main:{width:640*_TD.retina,height:560*_TD.retina,init:function(){ var act=new t.Act(this,"a1"); var scene=new t.Scene(act,"s1"); var map=new t.Map("main",{scene:scene,is_main_map:!0,grid_x:16,grid_y:16,entrance:[0,0],exit:[15,15]}); map.addToScene(scene,1,2); scene.map=map; this.newWave=function(){ t.money+=100; scene.wave++; map.addMonsters([[1,0]]); }; setInterval(this.newWave,10000); }, step2:function(){} }}; };
+            t.getDefaultMonsterAttributes=function(){ return [{speed:3,life:50,damage:1,money:5,color:"#f66"},{speed:6,life:50,damage:2,money:8,color:"#f96"},{speed:12,life:50,damage:3,money:12,color:"#ff6"}]; };
+        });
+
+        // 页面加载完成后检查是否已连接
+        window.onload = function() {
+            // 仅在已连接钱包后启动
+            if (window.GDOG_BONUS_MONEY !== undefined) {
+                setTimeout(startGame, 500);
+            }
         };
     </script>
 </body>
