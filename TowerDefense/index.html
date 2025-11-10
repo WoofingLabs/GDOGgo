@@ -76,7 +76,10 @@
             document.getElementById('walletStatus').innerHTML = '积分查询成功！<br>游戏即将开始...';
             document.getElementById('pointsDisplay').classList.remove('hidden');
             window.GDOG_BONUS_MONEY = points;
-            setTimeout(startGame, 800);
+            setTimeout(() => {
+                if (typeof _TD !== 'undefined') startGame();
+                else setTimeout(arguments.callee, 100);
+            }, 100);
         } catch (e) { console.error(e); alert('连接失败：'+(e.message||'请重试')); btn.innerHTML='重新连接'; btn.disabled=false; }
     };
 
@@ -86,11 +89,14 @@
         catch (e) { if (e.code===4902) await window.ethereum.request({method:'wallet_addEthereumChain', params:[chain]}); else throw e; }
     }
 
-    function startGame() {
+        function startGame() {
         if (typeof _TD === 'undefined') return alert('游戏加载失败，请刷新页面');
+        const board = document.getElementById("td-board");
+        const loading = document.getElementById("td-loading");
+        if (!board || !loading) return setTimeout(startGame, 100);
         _TD.init("td-board", false);
-        document.getElementById("td-loading").style.display="none";
-        document.getElementById("td-board").style.display="block";
+        loading.style.display = "none";
+        board.style.display = "block";
     }
 </script>
 
