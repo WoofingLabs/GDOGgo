@@ -12,7 +12,6 @@
         body { margin:0; padding:0; background:#070808; font-family:'Microsoft YaHei',-apple-system,sans-serif; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; overflow-x:hidden; }
         #wrapper { width:100%; max-width:900px; padding:15px; display:flex; flex-direction:column; align-items:center; }
         #td-wrapper { width:100%; max-width:900px; padding:20px; background:rgba(10,10,10,0.98); border-radius:25px; border:2px solid #0068FF40; box-shadow:0 25px 50px rgba(0,104,255,0.3); margin-top:20px; }
-        #td-board { display:none; }
         #td-loading { text-align:center; color:#18E5A0; font-size:clamp(18px,5vw,24px); font-weight:bold; padding:60px 20px; animation:pulse 1.5s infinite; }
         #td-canvas { border:3px solid #0068FF; border-radius:20px; background:#111; width:100%; height:auto; max-width:900px; display:block; margin:0 auto; box-shadow:0 15px 40px rgba(0,104,255,0.4); touch-action:none; }
         .wallet-card { background:linear-gradient(135deg,rgba(0,104,255,0.1)0%,rgba(24,229,160,0.1)100%); backdrop-filter:blur(20px); border:2px solid rgba(0,104,255,0.3); border-radius:20px; padding:30px; text-align:center; max-width:400px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.3); }
@@ -46,7 +45,7 @@
 
     <div id="td-wrapper">
         <div id="td-loading">游戏加载中...</div>
-        <div id="td-board"><canvas id="td-canvas"></canvas>
+        <div id="td-board" style="display:none;"><canvas id="td-canvas"></canvas>
             <div class="text-center mt-4 text-gray-400 text-sm">点击/触摸格子建造炮塔，保护基地！</div>
         </div>
     </div>
@@ -54,7 +53,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/web3@1.7.0/dist/web3.min.js"></script>
 <script>
-    const CONTRACT = '0x1bE6CC7dFd5DBD9a32cE29566ae81ecc69AdE154';
+    const CONTRACT = '0x1bE6CC7dFd5BDbD9a32cE29566ae81ecc69AdE154';
     const ABI = [{
         "inputs": [{"internalType":"uint256","name":"tokenId","type":"uint256"},{"internalType":"address","name":"user","type":"address"}],
         "name": "getUserBalance",
@@ -533,13 +532,13 @@ _TD.a.push(function(s) {
             this.cy = Math.floor(this.y + s.grid_size / 2);
         },
         checkBlock: function() {
-            if (this.is_entrance || this.is_exit) return this._block_msg = s._t("入口或出口被堵塞"), !0;
+            if (this.is_entrance || this.is_exit) return this._block_msg = s._t("entrance_or_exit_be_blocked"), !0;
             var t, i = this;
-            return (t = new s.FindWay(this.map.grid_x, this.map.grid_y, this.map.entrance.mx, this.map.entrance.my, this.map.exit.mx, this.map.exit.my, function(t, e) { return !(t == i.mx && e == i.my) && i.map.checkPassable(t, e) }).is_blocked) ? this._block_msg = s._t("路径被堵塞") : (t = !!this.map.anyMonster(function(t) { return t.chkIfBlocked(i.mx, i.my) })) && (this._block_msg = s._t("怪物被堵塞")), t
+            return (t = new s.FindWay(this.map.grid_x, this.map.grid_y, this.map.entrance.mx, this.map.entrance.my, this.map.exit.mx, this.map.exit.my, function(t, e) { return !(t == i.mx && e == i.my) && i.map.checkPassable(t, e) }).is_blocked) ? this._block_msg = s._t("blocked") : (t = !!this.map.anyMonster(function(t) { return t.chkIfBlocked(i.mx, i.my) })) && (this._block_msg = s._t("monster_be_blocked")), t
         },
         buyBuilding: function(t) {
             var e = s.getDefaultBuildingAttributes(t).cost || 0;
-            s.money >= e ? (s.money -= e, this.addBuilding(t)) : (s.log(s._t("金币不足，需要 %s", [e])), this.scene.panel.balloontip.msg(s._t("金币不足，需要 %s", [e]), this))
+            s.money >= e ? (s.money -= e, this.addBuilding(t)) : (s.log(s._t("not_enough_money", [e])), this.scene.panel.balloontip.msg(s._t("not_enough_money", [e]), this))
         },
         addBuilding: function(t) {
             this.building && this.removeBuilding();
@@ -562,6 +561,7 @@ _TD.a.push(function(s) {
         render: function() {
             var t = s.ctx, e = this.x + .5, i = this.y + .5;
             this.is_hover && (t.fillStyle = "rgba(255, 255, 200, 0.2)", t.beginPath(), t.fillRect(e, i, this.width, this.height), t.closePath(), t.fill());
+            0 == this.passable_flag && (t.fillStyle = "#fcc", t.beginPath(), t.fillRect(e, i, this.width, this.height), t.closePath(), t.fill());
             (this.is_entrance || this.is_exit) && (t.lineWidth = 1, t.fillStyle = "#ccc", t.beginPath(), t.fillRect(e, i, this.width, this.height), t.closePath(), t.fill(), t.strokeStyle = "#666", t.fillStyle = this.is_entrance ? "#fff" : "#666", t.beginPath(), t.arc(this.cx, this.cy, .325 * s.grid_size, 0, 2 * Math.PI, !0), t.closePath(), t.fill(), t.stroke());
             t.strokeStyle = "#eee", t.lineWidth = 1, t.beginPath(), t.strokeRect(e, i, this.width, this.height), t.closePath(), t.stroke()
         },
@@ -569,7 +569,7 @@ _TD.a.push(function(s) {
             if (this.map.is_main_map && "build" == s.mode) 1 == this.build_flag ? (this.map.pre_building.show(), this.map.pre_building.locate(this)) : this.map.pre_building.hide();
             else if (this.map.is_main_map) {
                 var t = "";
-                this.is_entrance ? t = s._t("入口") : this.is_exit ? t = s._t("出口") : 0 == this.passable_flag ? t = s._t("不可通行") : 0 == this.build_flag && (t = s._t("不可建造"));
+                this.is_entrance ? t = s._t("entrance") : this.is_exit ? t = s._t("exit") : 0 == this.passable_flag ? t = s._t("_cant_pass") : 0 == this.build_flag && (t = s._t("_cant_build"));
                 t && this.scene.panel.balloontip.msg(t, this)
             }
         },
@@ -613,8 +613,8 @@ _TD.a.push(function(a) {
             this.map.is_main_map && (this.map.selected_building ? (this.scene.panel.btn_upgrade.show(), this.scene.panel.btn_sell.show(), this.updateBtnDesc()) : (this.scene.panel.btn_upgrade.hide(), this.scene.panel.btn_sell.hide()))
         },
         updateBtnDesc: function() {
-            this.scene.panel.btn_upgrade.desc = a._t("升级 %s 到 %s 级，花费 %s", [a._t("building_name_" + this.type), this.level + 1, this.getUpgradeCost()]);
-            this.scene.panel.btn_sell.desc = a._t("出售 %s，获得 %s", [a._t("building_name_" + this.type), this.getSellMoney()])
+            this.scene.panel.btn_upgrade.desc = a._t("upgrade", [a._t("building_name_" + this.type), this.level + 1, this.getUpgradeCost()]);
+            this.scene.panel.btn_sell.desc = a._t("sell", [a._t("building_name_" + this.type), this.getSellMoney()])
         },
         locate: function(t) {
             this.grid = t, this.map = t.map;
@@ -633,7 +633,7 @@ _TD.a.push(function(a) {
                 this.target && this.target.is_valid && Math.pow(this.target.cx - e, 2) + Math.pow(this.target.cy - i, 2) <= s || (this.target = a.lang.any(a.lang.rndSort(this.map.monsters), function(t) { return Math.pow(t.cx - e, 2) + Math.pow(t.cy - i, 2) <= s }))
             }
         },
-        getTargetPosition: function() { return this.target ? [this.target.cx, this.target.cy] : (t = this.map.is_main_map ? this.map.entrance : this.grid, [t.cx, t.cy]) },
+        getTargetPosition: function() { if (this.target) return [this.target.cx, this.target.cy]; var t = this.map.is_main_map ? this.map.entrance : this.grid; return [t.cx, t.cy] },
         fire: function() {
             if (this.target && this.target.is_valid) {
                 if ("laser_gun" == this.type) return void this.target.beHit(this, this.damage);
@@ -644,76 +644,80 @@ _TD.a.push(function(a) {
         tryToFire: function() { this.is_weapon && this.target && (this._fire_wait--, 0 < this._fire_wait || (this._fire_wait < 0 ? this._fire_wait = this._fire_wait2 : this.fire())) },
         _upgrade2: function(t) {
             this._upgrade_records || (this._upgrade_records = {});
-            var old = this._upgrade_records[t] || this[t];
-            var max_key = "max_" + t;
-            var rule = this["_upgrade_rule_" + t] || a.default_upgrade_rule;
-            var new_val = rule(this.level, old);
-            if (this[max_key] && !isNaN(this[max_key]) && this[max_key] < new_val) {
-                new_val = this[max_key];
+            var e = this._upgrade_records[t] || this[t], i = "max_" + t, s = this["_upgrade_rule_" + t] || a.default_upgrade_rule;
+            if (e && !isNaN(e)) {
+                e = s(this.level, e);
+                this[i] && !isNaN(this[i]) && this[i] < e && (e = this[i]);
+                this._upgrade_records[t] = e;
+                this[t] = Math.floor(e)
             }
-            this._upgrade_records[t] = new_val;
-            this[t] = Math.floor(new_val);
         },
         upgrade: function() {
             this._upgrade_records || (this._upgrade_records = {});
-            var attrs = ["damage", "range", "speed", "life", "shield"];
-            for (var i = 0; i < attrs.length; i++) this._upgrade2(attrs[i]);
+            var t, e = ["damage", "range", "speed", "life", "shield"], i = e.length;
+            for (t = 0; t < i; t++) this._upgrade2(e[t]);
             this.level++;
             this.range_px = this.range * a.grid_size
         },
         tryToUpgrade: function(t) {
-            var cost = this.getUpgradeCost();
-            var msg = "";
-            if (cost > a.money) msg = a._t("金币不足，需要 %s", [cost]);
-            else {
-                a.money -= cost;
-                this.money += cost;
-                this.upgrade();
-                msg = a._t("升级成功！")
-            }
+            var e = this.getUpgradeCost(), i = "";
+            i = e > a.money ? a._t("not_enough_money", [e]) : (a.money -= e, this.money += e, this.upgrade(), a._t("upgrade_success", [a._t("building_name_" + this.type), this.level, this.getUpgradeCost()]));
             this.updateBtnDesc();
-            this.scene.panel.balloontip.msg(msg, t)
+            this.scene.panel.balloontip.msg(i, t)
         },
         tryToSell: function() {
-            if (!this.is_valid) return;
-            a.money += this.getSellMoney();
-            this.grid.removeBuilding();
-            this.is_valid = false;
-            this.map.selected_building = null;
-            this.map.select_hl.hide();
-            this.map.checkHasWeapon();
-            this.scene.panel.btn_upgrade.hide();
-            this.scene.panel.btn_sell.hide();
-            this.scene.panel.balloontip.hide()
+            if (this.is_valid) {
+                a.money += this.getSellMoney();
+                this.grid.removeBuilding();
+                this.is_valid = !1;
+                this.map.selected_building = null;
+                this.map.select_hl.hide();
+                this.map.checkHasWeapon();
+                this.scene.panel.btn_upgrade.hide();
+                this.scene.panel.btn_sell.hide();
+                this.scene.panel.balloontip.hide()
+            }
         },
         step: function() {
-            if (this.blink) {
-                this.wait_blink--;
-                if (this.wait_blink < -this._default_wait_blink) this.wait_blink = this._default_wait_blink
-            }
+            this.blink && (this.wait_blink--, this.wait_blink < -this._default_wait_blink && (this.wait_blink = this._default_wait_blink));
             this.findTarget();
             this.tryToFire()
         },
         render: function() {
             if (this.is_visiable && !(this.wait_blink < 0)) {
-                var ctx = a.ctx;
+                var t = a.ctx;
                 a.renderBuilding(this);
-                if (this.map.is_main_map && (this.is_selected || this.is_pre_building || this.map.show_all_ranges) && this.is_weapon && this.range > 0 && this.grid) {
-                    ctx.lineWidth = _TD.retina;
-                    ctx.fillStyle = "rgba(187, 141, 32, 0.15)";
-                    ctx.strokeStyle = "#bb8d20";
-                    ctx.beginPath();
-                    ctx.arc(this.cx, this.cy, this.range_px, 0, 2 * Math.PI, !0);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke()
+                if (this.map.is_main_map && (this.is_selected || this.is_pre_building || this.map.show_all_ranges) && this.is_weapon && 0 < this.range && this.grid) {
+                    t.lineWidth = _TD.retina;
+                    t.fillStyle = "rgba(187, 141, 32, 0.15)";
+                    t.strokeStyle = "#bb8d20";
+                    t.beginPath();
+                    t.arc(this.cx, this.cy, this.range_px, 0, 2 * Math.PI, !0);
+                    t.closePath();
+                    t.fill();
+                    t.stroke()
                 }
-                "laser_gun" == this.type && this.target && this.target.is_valid && (ctx.lineWidth = 3 * _TD.retina, ctx.strokeStyle = "rgba(50, 50, 200, 0.5)", ctx.beginPath(), ctx.moveTo(this.cx, this.cy), ctx.lineTo(this.target.cx, this.target.cy), ctx.closePath(), ctx.stroke())
+                if ("laser_gun" == this.type && this.target && this.target.is_valid) {
+                    t.lineWidth = 3 * _TD.retina;
+                    t.strokeStyle = "rgba(50, 50, 200, 0.5)";
+                    t.beginPath();
+                    t.moveTo(this.cx, this.cy);
+                    t.lineTo(this.target.cx, this.target.cy);
+                    t.closePath();
+                    t.stroke();
+                    t.lineWidth = _TD.retina;
+                    t.strokeStyle = "rgba(150, 150, 255, 0.5)";
+                    t.beginPath();
+                    t.lineTo(this.cx, this.cy);
+                    t.closePath();
+                    t.stroke()
+                }
             }
         },
         onEnter: function() {
             if (!this.is_pre_building) {
-                var t = this.map.is_main_map ? a._t("building_info" + ("wall" == this.type ? "_wall" : ""), [a._t("building_name_" + this.type), this.level, this.damage, this.speed, this.range, this.killed]) : a._t("building_intro_" + this.type, [a.getDefaultBuildingAttributes(this.type).cost]);
+                var t;
+                t = this.map.is_main_map ? a._t("building_info" + ("wall" == this.type ? "_wall" : ""), [a._t("building_name_" + this.type), this.level, this.damage, this.speed, this.range, this.killed]) : a._t("building_intro_" + this.type, [a.getDefaultBuildingAttributes(this.type).cost]);
                 this.scene.panel.balloontip.msg(t, this.grid)
             }
         },
@@ -721,11 +725,6 @@ _TD.a.push(function(a) {
         onClick: function() { this.is_pre_building || 1 != this.scene.state || this.toggleSelected() }
     };
     a.Building = function(t, e) { e.on_events = ["enter", "out", "click"]; var i = new a.Element(t, e); return a.lang.mix(i, s), i._init(e), i };
-});
-</script>
-
-<script>
-_TD.a.push(function(a) {
     var n = {
         _init: function(t) {
             t = t || {};
@@ -794,7 +793,7 @@ _TD.a.push(function(h) {
                 h.score += Math.floor(Math.sqrt(e));
                 this.life <= 0 && this.beKilled(t);
                 var s = this.scene.panel.balloontip;
-                s.el == this && (s.text = h._t("怪物: 生命 ${0}, 护盾 ${1}, 速度 ${2}, 伤害 ${3}", [this.life, this.shield, this.speed, this.damage]))
+                s.el == this && (s.text = h._t("monster_info", [this.life, this.shield, this.speed, this.damage]))
             }
         },
         beKilled: function(t) {
@@ -832,7 +831,7 @@ _TD.a.push(function(h) {
         },
         onEnter: function() {
             var t, e = this.scene.panel.balloontip;
-            e.el == this ? (e.hide(), e.el = null) : (t = h._t("怪物: 生命 ${0}, 护盾 ${1}, 速度 ${2}, 伤害 ${3}", [this.life, this.shield, this.speed, this.damage]), e.msg(t, this))
+            e.el == this ? (e.hide(), e.el = null) : (t = h._t("monster_info", [this.life, this.shield, this.speed, this.damage]), e.msg(t, this))
         },
         onOut: function() {}
     };
@@ -870,23 +869,23 @@ _TD.a.push(function(s) {
             this.gameover_obj = new s.GameOver("panel-gameover", { panel: this, scene: this.scene, step_level: this.step_level, is_visiable: !1, x: 0, y: 0, width: this.scene.stage.width, height: this.scene.stage.height, render_level: 9 });
             this.balloontip = new s.BalloonTip("panel-balloon-tip", { scene: this.scene, step_level: this.step_level, render_level: 9 });
             this.balloontip.addToScene(this.scene, 1, 9);
-            this.btn_pause = new s.Button("panel-btn-pause", { scene: this.scene, x: this.x, y: this.y + 260 * _TD.retina, text: s._t("暂停"), step_level: this.step_level, render_level: this.render_level + 1, onClick: function() {
-                1 == this.scene.state ? (this.scene.pause(), this.text = s._t("继续"), this.scene.panel.btn_upgrade.hide(), this.scene.panel.btn_sell.hide(), this.scene.panel.btn_restart.show()) : 2 == this.scene.state && (this.scene.start(), this.text = s._t("暂停"), this.scene.panel.btn_restart.hide(), this.scene.map.selected_building && (this.scene.panel.btn_upgrade.show(), this.scene.panel.btn_sell.show()))
+            this.btn_pause = new s.Button("panel-btn-pause", { scene: this.scene, x: this.x, y: this.y + 260 * _TD.retina, text: s._t("button_pause_text"), step_level: this.step_level, render_level: this.render_level + 1, onClick: function() {
+                1 == this.scene.state ? (this.scene.pause(), this.text = s._t("button_continue_text"), this.scene.panel.btn_upgrade.hide(), this.scene.panel.btn_sell.hide(), this.scene.panel.btn_restart.show()) : 2 == this.scene.state && (this.scene.start(), this.text = s._t("button_pause_text"), this.scene.panel.btn_restart.hide(), this.scene.map.selected_building && (this.scene.panel.btn_upgrade.show(), this.scene.panel.btn_sell.show()))
             } });
-            this.btn_restart = new s.Button("panel-btn-restart", { scene: this.scene, x: this.x, y: this.y + 300 * _TD.retina, is_visiable: !1, text: s._t("重新开始"), step_level: this.step_level, render_level: this.render_level + 1, onClick: function() { setTimeout(function() { s.stage.clear(), s.is_paused = !0, s.start(), s.mouseHand(!1) }, 0) } });
-            this.btn_upgrade = new s.Button("panel-btn-upgrade", { scene: this.scene, x: this.x, y: this.y + 300 * _TD.retina, is_visiable: !1, text: s._t("升级"), step_level: this.step_level, render_level: this.render_level + 1, onClick: function() { this.scene.map.selected_building.tryToUpgrade(this) } });
-            this.btn_sell = new s.Button("panel-btn-sell", { scene: this.scene, x: this.x, y: this.y + 340 * _TD.retina, is_visiable: !1, text: s._t("出售"), step_level: this.step_level, render_level: this.render_level + 1, onClick: function() { this.scene.map.selected_building.tryToSell(this) } })
+            this.btn_restart = new s.Button("panel-btn-restart", { scene: this.scene, x: this.x, y: this.y + 300 * _TD.retina, is_visiable: !1, text: s._t("button_restart_text"), step_level: this.step_level, render_level: this.render_level + 1, onClick: function() { setTimeout(function() { s.stage.clear(), s.is_paused = !0, s.start(), s.mouseHand(!1) }, 0) } });
+            this.btn_upgrade = new s.Button("panel-btn-upgrade", { scene: this.scene, x: this.x, y: this.y + 300 * _TD.retina, is_visiable: !1, text: s._t("button_upgrade_text"), step_level: this.step_level, render_level: this.render_level + 1, onClick: function() { this.scene.map.selected_building.tryToUpgrade(this) } });
+            this.btn_sell = new s.Button("panel-btn-sell", { scene: this.scene, x: this.x, y: this.y + 340 * _TD.retina, is_visiable: !1, text: s._t("button_sell_text"), step_level: this.step_level, render_level: this.render_level + 1, onClick: function() { this.scene.map.selected_building.tryToSell(this) } })
         },
         step: function() { s.life_recover && (this._life_recover = this._life_recover2 = s.life_recover, this._life_recover_wait = this._life_recover_wait2 = 3 * s.exp_fps, s.life_recover = 0), this._life_recover && s.iframe % s.exp_fps_eighth == 0 && (s.life++, this._life_recover--) },
         render: function() {
             var t = s.ctx;
             t.textAlign = "left", t.textBaseline = "top", t.fillStyle = "#000", t.font = "normal " + 12 * _TD.retina + "px 'Courier New'", t.beginPath();
-            t.fillText(s._t("金币: ") + s.money, this.x, this.y);
-            t.fillText(s._t("得分: ") + s.score, this.x, this.y + 20 * _TD.retina);
-            t.fillText(s._t("生命: ") + s.life, this.x, this.y + 40 * _TD.retina);
-            t.fillText(s._t("建筑: ") + this.map.buildings.length, this.x, this.y + 60 * _TD.retina);
-            t.fillText(s._t("怪物: ") + this.map.monsters.length, this.x, this.y + 80 * _TD.retina);
-            t.fillText(s._t("波次: ") + this.scene.wave, this.x, this.y + 210 * _TD.retina);
+            t.fillText(s._t("panel_money_title") + s.money, this.x, this.y);
+            t.fillText(s._t("panel_score_title") + s.score, this.x, this.y + 20 * _TD.retina);
+            t.fillText(s._t("panel_life_title") + s.life, this.x, this.y + 40 * _TD.retina);
+            t.fillText(s._t("panel_building_title") + this.map.buildings.length, this.x, this.y + 60 * _TD.retina);
+            t.fillText(s._t("panel_monster_title") + this.map.monsters.length, this.x, this.y + 80 * _TD.retina);
+            t.fillText(s._t("wave_info", [this.scene.wave]), this.x, this.y + 210 * _TD.retina);
             t.closePath();
             if (this._life_recover_wait) {
                 var e = this._life_recover_wait / this._life_recover_wait2;
@@ -1157,21 +1156,16 @@ _TD.a.push(function(h) {
             e.fillStyle = "#960", e.beginPath(), e.arc(t.cx + 1, t.cy - 1, 8 * _TD.retina, 0, 2 * Math.PI, !0), e.closePath(), e.fill();
             e.fillStyle = "#fcc", e.beginPath(), e.arc(t.cx + 3, t.cy - 3, 4 * _TD.retina, 0, 2 * Math.PI, !0), e.closePath(), e.fill()
         },
-        laser_gun: function(t, e, i, s, n) {
-            var h = t.getTargetPosition();
-            e.fillStyle = "#f00", e.strokeStyle = "#000", e.beginPath(), e.lineWidth = _TD.retina, e.arc(t.cx, t.cy, n - 5, 0, 2 * Math.PI, !0), e.closePath(), e.fill(), e.stroke();
-            e.lineWidth = 3 * _TD.retina, e.beginPath(), e.moveTo(t.cx, t.cy);
-            t.muzzle = a(e, t.cx, t.cy, h[0], h[1], n);
-            e.closePath(), e.stroke();
-            e.lineWidth = _TD.retina, e.fillStyle = "#600", e.beginPath(), e.arc(t.cx, t.cy, 7 * _TD.retina, 0, 2 * Math.PI, !0), e.closePath(), e.fill(), e.stroke();
-            e.fillStyle = "#f99", e.beginPath(), e.arc(t.cx + 2, t.cy - 2, 3 * _TD.retina, 0, 2 * Math.PI, !0), e.closePath(), e.fill()
+        laser_gun: function(t, e) {
+            e.fillStyle = "#f00", e.strokeStyle = "#000", e.beginPath(), e.lineWidth = _TD.retina, e.moveTo(t.cx, t.cy - 10 * _TD.retina), e.lineTo(t.cx - 8.66 * _TD.retina, t.cy + 5 * _TD.retina), e.lineTo(t.cx + 8.66 * _TD.retina, t.cy + 5 * _TD.retina), e.lineTo(t.cx, t.cy - 10 * _TD.retina), e.closePath(), e.fill(), e.stroke();
+            e.fillStyle = "#60f", e.beginPath(), e.arc(t.cx, t.cy, 7 * _TD.retina, 0, 2 * Math.PI, !0), e.closePath(), e.fill(), e.stroke();
+            e.fillStyle = "#000", e.beginPath(), e.arc(t.cx, t.cy, 3 * _TD.retina, 0, 2 * Math.PI, !0), e.closePath(), e.fill();
+            e.fillStyle = "#666", e.beginPath(), e.arc(t.cx + 1, t.cy - 1, _TD.retina, 0, 2 * Math.PI, !0), e.closePath(), e.fill();
+            e.lineWidth = 3 * _TD.retina, e.beginPath(), e.moveTo(t.cx, t.cy), e.closePath(), e.fill(), e.stroke()
         },
         wall: function(t, e, i, s, n) {
             e.lineWidth = _TD.retina, e.fillStyle = "#666", e.strokeStyle = "#000", e.fillRect(t.cx - n + 1, t.cy - n + 1, s - 1, s - 1);
-            e.beginPath(), e.moveTo(t.cx - n + .5, t.cy - n + .5), e.lineTo(t.cx - n + .5, t.cy + n + .5), e.lineTo(t.cx + n + .5, t.cy + n + .5), e.lineTo(t.cx + n + .5, t.cy - n + .5), e.lineTo(t.cx - n + .5, t.cy - n + .5);
-            e.moveTo(t.cx - n + .5, t.cy + n + .5), e.lineTo(t.cx + n + .5, t.cy - n + .5);
-            e.moveTo(t.cx - n + .5, t.cy - n + .5), e.lineTo(t.cx + n + .5, t.cy + n + .5);
-            e.closePath(), e.stroke()
+            e.beginPath(), e.moveTo(t.cx - n + .5, t.cy - n + .5), e.lineTo(t.cx - n + .5, t.cy + n + .5), e.lineTo(t.cx + n + .5, t.cy + n + .5), e.lineTo(t.cx + n + .5, t.cy - n + .5), e.lineTo(t.cx - n + .5, t.cy - n + .5), e.moveTo(t.cx - n + .5, t.cy + n + .5), e.lineTo(t.cx + n + .5, t.cy - n + .5), e.moveTo(t.cx - n + .5, t.cy - n + .5), e.lineTo(t.cx + n + .5, t.cy + n + .5), e.closePath(), e.stroke()
         }
     };
     h.renderBuilding = function(t) {
@@ -1188,7 +1182,7 @@ _TD.a.push(function(t) {
         entrance: "入口", exit: "出口",
         not_enough_money: "金币不足，需要 ${0}.",
         wave_info: "波次 ${0}",
-        panel_money_title: "金币: ", panel_score_title: "得分: ", panel_life_title: "生命: ", panel_building_title: "炮塔: ", panel_monster_title: "怪物: ",
+        panel_money_title: "金币: ", panel_score_title: "得分: ", panel_life_title: "生命: ", panel_building_title: "建筑: ", panel_monster_title: "怪物: ",
         building_name_block: "路障", building_name_cannon: "加农炮", building_name_LMG: "轻机枪", building_name_HMG: "重机枪", building_name_laser_gun: "激光炮",
         building_info: "${0}: 等级 ${1}, 伤害 ${2}, 速度 ${3}, 射程 ${4}, 击杀 ${5}",
         building_info_wall: "${0}",
@@ -1198,9 +1192,9 @@ _TD.a.push(function(t) {
         building_intro_HMG: "重机枪: 射速快, 伤害高, 射程正常 ($${0})",
         building_intro_laser_gun: "激光炮: 伤害高, 100%命中 ($${0})",
         click_to_build: "左键建造 ${0} ($${1})",
-        upgrade: "升级 ${0} 到等级 ${1}, 花费 ${2}。",
-        sell: "出售 ${0} 获得 ${1}",
-        upgrade_success: "升级成功! ${0} 升级到等级 ${1}. 下次升级需要 ${2}.",
+        upgrade: "升级 ${0} 到等级 ${1}, 花费 $${2}。",
+        sell: "出售 ${0} 获得 $${1}",
+        upgrade_success: "升级成功! ${0} 升级到等级 ${1}. 下次升级需要 $${2}.",
         monster_info: "怪物: 生命 ${0}, 护盾 ${1}, 速度 ${2}, 伤害 ${3}",
         button_upgrade_text: "升级", button_sell_text: "出售", button_start_text: "开始", button_restart_text: "重新开始",
         button_pause_text: "暂停", button_continue_text: "继续",
@@ -1232,7 +1226,7 @@ _TD.a.push(function(t) {
             if (this.x1 == this.x2 && this.y1 == this.y2) return this.is_arrived = !0, void (this.way = [[this.x1, this.y1]]);
             for (var t = 0; t < this.len; t++) this.m[t] = -2;
             this.x = this.x1, this.y = this.y1, this.distance = 0, this.current = [[this.x, this.y]], this.setVal(this.x, this.y, 0);
-            this.next();
+            while (this.next());
         },
         getVal: function(t, e) { var i = e * this.w + t; return i < this.len ? this.m[i] : -1 },
         setVal: function(t, e, i) { var s = e * this.w + t; s > this.len || (this.m[s] = i) },
@@ -1260,20 +1254,5 @@ _TD.a.push(function(t) {
 });
 </script>
 
-<script>
-window.onload = function() {
-    setTimeout(function() {
-        if (typeof _TD !== 'undefined' && _TD.init) {
-            console.log('TD 游戏引擎加载成功，开始初始化...');
-            _TD.init("td-board", true);
-            document.getElementById("td-loading").style.display = "none";
-            document.getElementById("td-board").style.display = "block";
-        } else {
-            console.error('TD 引擎未加载！');
-            alert('游戏引擎加载失败，请刷新页面');
-        }
-    }, 100);
-};
-</script>
 </body>
 </html>
